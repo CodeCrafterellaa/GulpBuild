@@ -1,101 +1,163 @@
-
-// import gulp from 'gulp';
-// import less from 'gulp-less';
-// import rename from 'gulp-rename';
-// import cleanCSS from 'gulp-clean-css';
-// import { deleteAsync } from 'del';
-
-// const paths = {
-//     styles: {
-//         src: 'src/styles/**/*.less',
-//         dest: 'dist/css/'
-//     },
-//     scripts: {
-//         src: 'src/scripts/**/*.js',
-//         dest: 'dist/js/'
-//     }
-// };
-
-// // Задача для очистки
-// function clean() {
-//     return deleteAsync(['dist/*']);
-// }
-
-// // Задача для стилей
-// function styles() {
-//     return gulp.src(paths.styles.src)
-//         .pipe(less())
-//         .pipe(cleanCSS())
-//         .pipe(rename({
-//             basename: 'main',
-//             suffix: '.min'
-//         }))
-//         .pipe(gulp.dest(paths.styles.dest));
-// }
-// function watch() {
-//     gulp.watch(paths.styles.src, styles)
-// }
-// const build = gulp.series(clean, styles, watch)
-// // Экспорт функций
-// export { clean, styles, watch };
-// exports.build = build
-// exports.default = build
 import gulp, { parallel } from 'gulp';
 import less from 'gulp-less';
+import stylus from 'gulp-stylus';
+import gulpSass from 'gulp-sass';
+import sass from 'sass';
+const sassCompiler = gulpSass(sass);
 import rename from 'gulp-rename';
 import cleanCSS from 'gulp-clean-css';
+// import ts from 'gulp-typescript';
 import babel from 'gulp-babel';
 import uglify from 'gulp-uglify';
 import concat from 'gulp-concat';
+import sourcemaps from 'gulp-sourcemaps';
+import autoprefixer from 'gulp-autoprefixer';
+import imagemin from 'gulp-imagemin';
+import htmlmin from 'gulp-htmlmin';
+import size from 'gulp-size';
+import gulppug from 'gulp-pug';  // Исправлено
+import newer from 'gulp-newer';
+import browserSync from 'browser-sync';
+import swiper from 'swiper';
+const bs = browserSync.create();
 import { deleteAsync } from 'del';
 
 const paths = {
+    pug: {
+        src: 'src/**/*.pug',
+        dest: 'dist/'
+    },
+    html: {
+        src: 'src/**/*.html',
+        dest: 'dist'
+    },
     styles: {
-        src: 'src/styles/**/*.less',
+        src: ['src/styles/**/*.sass', 'src/styles/**/*.scss', 'src/styles/**/*.sty1', 'src/styles/**/*.less'],
         dest: 'dist/css/'
     },
     scripts: {
-        src: 'src/scripts/**/*.js',
+        src: ['src/scripts/**/*.ts', 'src/scripts/**/*.js'],
         dest: 'dist/js/'
+    },
+    images: {
+        src: 'src/img/**/*.{jpg,jpeg,png,gif,svg,webp}',  // Исправлено
+        dest: 'dist/img/'
     }
 };
 
 // Задача для очистки
 function clean() {
-    return deleteAsync(['dist/*']);
+    return deleteAsync(['dist/*', '!dist/img']);
 }
 
-// Задача для стилей
+function pugTask() {  // Переименовано на pugTask
+    return gulp.src(paths.pug.src)
+        .pipe(gulppug())  // Используем gulppug
+        .pipe(size({
+            showFiles: true
+        }))
+        .pipe(gulp.dest(paths.pug.dest))
+        .pipe(bs.stream());
+}
+
+function html() {
+    return gulp.src(paths.html.src)
+        .pipe(htmlmin({ collapseWhitespace: true }))
+        .pipe(size({
+            showFiles: true
+        }))
+        .pipe(gulp.dest('dist'))
+        .pipe(bs.stream());
+}
+
 function styles() {
     return gulp.src(paths.styles.src)
-        .pipe(less())
-        .pipe(cleanCSS())
+        .pipe(sourcemaps.init())
+        // .pipe(less())
+        // .pipe(stylus())
+        .pipe(sassCompiler().on('error', sassCompiler.logError))
+        .pipe(autoprefixer({
+            cascade: false
+        }))
+        .pipe(cleanCSS({
+            level: 2
+        }))
         .pipe(rename({
             basename: 'main',
             suffix: '.min'
         }))
-        .pipe(gulp.dest(paths.styles.dest));
+        .pipe(sourcemaps.write('.'))
+        .pipe(size({
+            showFiles: true
+        }))
+        .pipe(gulp.dest(paths.styles.dest))
+        .pipe(bs.stream());
 }
-// Задача для обработки скриптов
 function scripts() {
-    return gulp.src(paths.scripts.src, {
-        sourcemaps: true
-    })
-        .pipe(babel())
+    return gulp.src(['node_modules/swiper/swiper-bundle.js', ...paths.scripts.src])
+        .pipe(sourcemaps.init())
+        .pipe(babel({
+            presets: ['@babel/env']
+        }))
         .pipe(uglify())
         .pipe(concat('main.min.js'))
-        .pipe(gulp.dest(paths.scripts.dest));
+        .pipe(sourcemaps.write('.'))
+        .pipe(size({
+            showFiles: true
+        }))
+        .pipe(gulp.dest(paths.scripts.dest))
+        .pipe(bs.stream());
 }
+// function scripts() {
+//     return gulp.src(['node_modules/swiper/swiper-bundle.js', 'paths.scripts.src'])
+//         .pipe(sourcemaps.init())
+//         .pipe(babel({
+//             presets: ['@babel/env']
+//         }))
+//         .pipe(uglify())
+//         .pipe(concat('main.min.js'))
+//         .pipe(sourcemaps.write('.'))
+//         .pipe(size({
+//             showFiles: true
+//         }))
+//         // .pipe(ts({
+//         //     noImplicitAny: true,
+//         //     outFile: 'main.min.js'
+//         // }))
+//         .pipe(gulp.dest(paths.scripts.dest))
+//         .pipe(bs.stream());
+// }
+
+function img() {
+    return gulp.src(paths.images.src)
+        .pipe(newer(paths.images.dest))
+        .pipe(imagemin({
+            progressive: true
+        }))
+        .pipe(size({
+            showFiles: true
+        }))
+        .pipe(gulp.dest(paths.images.dest));
+}
+
 function watch() {
+    bs.init({
+        server: {
+            baseDir: "./dist/"
+        }
+    });
+    gulp.watch(paths.html.dest).on('change', bs.reload);
+    gulp.watch(paths.html.src, html);
     gulp.watch(paths.styles.src, styles);
     gulp.watch(paths.scripts.src, scripts);
+    gulp.watch(paths.images.src, img);
 }
 
 // Собираем все задачи в одну
-const build = gulp.series(clean, gulp.parallel(styles, scripts), watch);
+const build = gulp.series(clean, html, gulp.parallel(styles, scripts, img), watch);
 
 // Экспорт задач
-export { clean, styles, watch, build, scripts };
+export { clean, styles, watch, build, scripts, img, html, pugTask as pug };
 
 // Экспорт по умолчанию
 export default build;
