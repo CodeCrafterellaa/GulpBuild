@@ -1,6 +1,6 @@
 import gulp, { parallel } from 'gulp';
 import less from 'gulp-less';
-import stylus from 'gulp-stylus';
+// import stylus from 'gulp-stylus';
 import gulpSass from 'gulp-sass';
 import sass from 'sass';
 const sassCompiler = gulpSass(sass);
@@ -15,10 +15,13 @@ import autoprefixer from 'gulp-autoprefixer';
 import imagemin from 'gulp-imagemin';
 import htmlmin from 'gulp-htmlmin';
 import size from 'gulp-size';
-import gulppug from 'gulp-pug';  // Исправлено
+import gulppug from 'gulp-pug';
 import newer from 'gulp-newer';
+import avif from 'gulp-avif';
+import webp from 'gulp-webp';
 import browserSync from 'browser-sync';
 import swiper from 'swiper';
+
 const bs = browserSync.create();
 import { deleteAsync } from 'del';
 
@@ -40,7 +43,7 @@ const paths = {
         dest: 'dist/js/'
     },
     images: {
-        src: 'src/img/**/*.{jpg,jpeg,png,gif,svg,webp}',  // Исправлено
+        src: 'src/img/**/*',
         dest: 'dist/img/'
     }
 };
@@ -128,18 +131,29 @@ function scripts() {
 //         .pipe(bs.stream());
 // }
 
+// function img() {
+//     return gulp.src(paths.images.src)
+//         .pipe(newer(paths.images.dest))
+//         .pipe(imagemin({
+//             progressive: true
+//         }))
+//         .pipe(size({
+//             showFiles: true
+//         }))
+//         .pipe(gulp.dest(paths.images.dest));
+// }
 function img() {
     return gulp.src(paths.images.src)
-        .pipe(newer(paths.images.dest))
+        .pipe(newer(paths.images.dest)) // Пропускает файлы, которые не изменились
         .pipe(imagemin({
             progressive: true
         }))
-        .pipe(size({
-            showFiles: true
-        }))
-        .pipe(gulp.dest(paths.images.dest));
+        .pipe(gulp.dest(paths.images.dest)) // Сохраняет оригиналы
+        .pipe(webp())
+        .pipe(gulp.dest(paths.images.dest)) // Сохраняет WebP версии
+        .pipe(avif())
+        .pipe(gulp.dest(paths.images.dest)); // Сохраняет AVIF версии
 }
-
 function watch() {
     bs.init({
         server: {
