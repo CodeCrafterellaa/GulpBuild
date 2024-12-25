@@ -1,5 +1,5 @@
 import gulp, { parallel } from 'gulp';
-import less from 'gulp-less';
+// import less from 'gulp-less';
 // import stylus from 'gulp-stylus';
 import gulpSass from 'gulp-sass';
 import sass from 'sass';
@@ -17,10 +17,9 @@ import htmlmin from 'gulp-htmlmin';
 import size from 'gulp-size';
 import gulppug from 'gulp-pug';
 import newer from 'gulp-newer';
-import avif from 'gulp-avif';
 import webp from 'gulp-webp';
 import browserSync from 'browser-sync';
-import swiper from 'swiper';
+// import swiper from 'swiper';
 
 const bs = browserSync.create();
 import { deleteAsync } from 'del';
@@ -151,8 +150,6 @@ function img() {
         .pipe(gulp.dest(paths.images.dest)) // Сохраняет оригиналы
         .pipe(webp())
         .pipe(gulp.dest(paths.images.dest)) // Сохраняет WebP версии
-        .pipe(avif())
-        .pipe(gulp.dest(paths.images.dest)); // Сохраняет AVIF версии
 }
 function watch() {
     bs.init({
