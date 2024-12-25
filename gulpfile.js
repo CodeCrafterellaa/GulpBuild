@@ -110,37 +110,7 @@ function scripts() {
         .pipe(gulp.dest(paths.scripts.dest))
         .pipe(bs.stream());
 }
-// function scripts() {
-//     return gulp.src(['node_modules/swiper/swiper-bundle.js', 'paths.scripts.src'])
-//         .pipe(sourcemaps.init())
-//         .pipe(babel({
-//             presets: ['@babel/env']
-//         }))
-//         .pipe(uglify())
-//         .pipe(concat('main.min.js'))
-//         .pipe(sourcemaps.write('.'))
-//         .pipe(size({
-//             showFiles: true
-//         }))
-//         // .pipe(ts({
-//         //     noImplicitAny: true,
-//         //     outFile: 'main.min.js'
-//         // }))
-//         .pipe(gulp.dest(paths.scripts.dest))
-//         .pipe(bs.stream());
-// }
 
-// function img() {
-//     return gulp.src(paths.images.src)
-//         .pipe(newer(paths.images.dest))
-//         .pipe(imagemin({
-//             progressive: true
-//         }))
-//         .pipe(size({
-//             showFiles: true
-//         }))
-//         .pipe(gulp.dest(paths.images.dest));
-// }
 function img() {
     return gulp.src(paths.images.src)
         .pipe(newer(paths.images.dest)) // Пропускает файлы, которые не изменились
@@ -151,6 +121,8 @@ function img() {
         .pipe(webp())
         .pipe(gulp.dest(paths.images.dest)) // Сохраняет WebP версии
 }
+
+
 function watch() {
     bs.init({
         server: {

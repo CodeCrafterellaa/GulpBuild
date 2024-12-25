@@ -1,4 +1,4 @@
 // @import "../../node_modules/swiper/swiper-bundle";
-body {
-    background-color: red;
-}
+@use "_rest" as reset;
+@use "_var" as v;
+@use "_mixins" as m;
